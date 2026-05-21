@@ -7,16 +7,20 @@ import DispatcherDashboard from './pages/DispatcherDashboard';
 import DriverDashboard from './pages/DriverDashboard';
 import CustomerTracking from './pages/CustomerTracking';
 import Reports from './pages/Reports';
+import AdminDashboard from './pages/AdminDashboard';
 
 function Guard({ children, role }: { children: React.ReactNode; role: string }) {
   const { user, loading } = useAuth();
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600" />
     </div>
   );
   if (!user) return <Navigate to="/" replace />;
-  if (user.role !== role) return <Navigate to={user.role === 'DISPATCHER' ? '/dispatcher' : '/driver'} replace />;
+  if (user.role !== role) {
+    const destination = user.role === 'ADMIN' ? '/admin' : user.role === 'DISPATCHER' ? '/dispatcher' : '/driver';
+    return <Navigate to={destination} replace />;
+  }
   return <>{children}</>;
 }
 
@@ -27,6 +31,7 @@ function AppRoutes() {
       <Route path="/login/dispatcher" element={<DispatcherLogin />} />
       <Route path="/login/driver" element={<DriverLogin />} />
       <Route path="/track" element={<CustomerTracking />} />
+      <Route path="/admin" element={<Guard role="ADMIN"><AdminDashboard /></Guard>} />
       <Route path="/dispatcher" element={<Guard role="DISPATCHER"><DispatcherDashboard /></Guard>} />
       <Route path="/reports" element={<Guard role="DISPATCHER"><Reports /></Guard>} />
       <Route path="/driver" element={<Guard role="DRIVER"><DriverDashboard /></Guard>} />

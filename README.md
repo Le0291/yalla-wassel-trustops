@@ -20,6 +20,11 @@ Yalla Wassel TrustOps replaces WhatsApp chaos with a structured web app where:
 
 ## Features
 
+### Admin Dashboard
+- Admin login for account management
+- Create dispatcher accounts with name, email, phone, and password
+- View existing dispatcher accounts
+
 ### Dispatcher Dashboard
 - Overview stats (total, waiting, in-progress, delivered, urgent)
 - Full orders table with search and filters
@@ -122,13 +127,14 @@ Open **http://localhost:5173** in your browser.
 
 | Role | Email | Password |
 |---|---|---|
-| Dispatcher | dispatcher@yallawassel.com | password123 |
-| Driver (Mahmoud) | mahmoud@yallawassel.com | password123 |
-| Driver (Yousef) | yousef@yallawassel.com | password123 |
-| Driver (Hamza) | hamza@yallawassel.com | password123 |
-| Driver (Wael) | wael@yallawassel.com | password123 |
-| Driver (Amjad) | amjad@yallawassel.com | password123 |
-| Driver (Khaled) | khaled@yallawassel.com | password123 |
+| Admin | admin@yallawassel.com | 123 |
+| Dispatcher | dispatcher@yallawassel.com | 123 |
+| Driver (Mahmoud) | mahmoud@yallawassel.com | 123 |
+| Driver (Yousef) | yousef@yallawassel.com | 123 |
+| Driver (Hamza) | hamza@yallawassel.com | 123 |
+| Driver (Wael) | wael@yallawassel.com | 123 |
+| Driver (Amjad) | amjad@yallawassel.com | 123 |
+| Driver (Khaled) | khaled@yallawassel.com | 123 |
 
 ### Customer Tracking (no login)
 Visit `/track` and enter any of these order numbers: **1001, 1002, 1003, 1004, 1005, 1006**
@@ -191,6 +197,9 @@ yalla-wassel/
 ```
 POST   /api/auth/login
 GET    /api/auth/me
+
+GET    /api/admin/dispatchers
+POST   /api/admin/dispatchers    { name, email, phone, password }
 
 GET    /api/orders              ?status= &priority= &search=
 POST   /api/orders

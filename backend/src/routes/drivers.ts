@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { authenticate, requireRole, AuthRequest } from '../middleware/auth';
 
 const router = Router();
@@ -30,6 +31,36 @@ router.get('/', authenticate, requireRole('DISPATCHER'), async (_req, res) => {
   }));
 
   res.json(result);
+});
+
+// Create a new driver (dispatcher only)
+router.post('/', authenticate, requireRole('DISPATCHER'), async (req, res) => {
+  const { name, email, phone, zone } = req.body;
+  if (!name || !email) return res.status(400).json({ error: 'Name and email required' });
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) return res.status(409).json({ error: 'Email already in use' });
+
+  const password = await bcrypt.hash('123', 10);
+  const driver = await prisma.user.create({
+    data: { email, password, role: 'DRIVER', name, phone: phone || null, zone: zone || null, driverStatus: 'AVAILABLE' },
+    select: { id: true, name: true, email: true, phone: true, zone: true, driverStatus: true },
+  });
+  res.status(201).json(driver);
+});
+
+// Delete a driver (dispatcher only)
+router.delete('/:id', authenticate, requireRole('DISPATCHER'), async (req, res) => {
+  const driver = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!driver || driver.role !== 'DRIVER') return res.status(404).json({ error: 'Driver not found' });
+
+  // Unassign their active orders before deleting
+  await prisma.order.updateMany({
+    where: { driverId: req.params.id, status: { notIn: ['DELIVERED'] } },
+    data: { driverId: null, status: 'WAITING' },
+  });
+  await prisma.user.delete({ where: { id: req.params.id } });
+  res.json({ success: true });
 });
 
 // Suggest best driver for a zone

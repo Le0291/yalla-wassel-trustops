@@ -11,7 +11,7 @@ model User {
   id           String       @id @default(cuid())
   email        String       @unique
   password     String
-  role         String       // DISPATCHER | DRIVER
+  role         String       // ADMIN | DISPATCHER | DRIVER
   name         String
   phone        String?
   zone         String?

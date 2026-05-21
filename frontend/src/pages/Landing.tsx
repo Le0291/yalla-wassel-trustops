@@ -1,85 +1,151 @@
-import { useNavigate } from 'react-router-dom';
-import { Truck, ArrowRight } from 'lucide-react';
+import { ReactNode, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, ShieldCheck, Truck, UserRound } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Role } from '../types';
+
+const LOGIN_OPTIONS: Record<Role, {
+  label: string;
+  helper: string;
+  email: string;
+  path: string;
+  icon: ReactNode;
+}> = {
+  ADMIN: {
+    label: 'Admin',
+    helper: 'Add dispatcher accounts',
+    email: 'admin@yallawassel.com',
+    path: '/admin',
+    icon: <ShieldCheck className="w-4 h-4" />,
+  },
+  DISPATCHER: {
+    label: 'Dispatcher',
+    helper: 'Manage orders and drivers',
+    email: 'dispatcher@yallawassel.com',
+    path: '/dispatcher',
+    icon: <Truck className="w-4 h-4" />,
+  },
+  DRIVER: {
+    label: 'Driver',
+    helper: 'Update deliveries',
+    email: 'mahmoud@yallawassel.com',
+    path: '/driver',
+    icon: <UserRound className="w-4 h-4" />,
+  },
+};
 
 export default function Landing() {
+  const [role, setRole] = useState<Role>('DISPATCHER');
+  const [email, setEmail] = useState(LOGIN_OPTIONS.DISPATCHER.email);
+  const [password, setPassword] = useState('123');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
 
+  const chooseRole = (nextRole: Role) => {
+    setRole(nextRole);
+    setEmail(LOGIN_OPTIONS[nextRole].email);
+    setPassword('123');
+    setError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const user = await login(email, password);
+      if (user.role !== role) {
+        logout();
+        setError(`This account is not a ${LOGIN_OPTIONS[role].label.toLowerCase()} account.`);
+        return;
+      }
+      navigate(LOGIN_OPTIONS[user.role].path);
+    } catch {
+      setError('Wrong email or password. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0f0f1a] text-white flex flex-col">
-
-      {/* Nav */}
-      <nav className="px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full">
-        <div className="flex items-center gap-2">
-          <Truck className="w-5 h-5 text-indigo-400" />
-          <span className="font-bold text-lg tracking-tight">Yalla Wassel</span>
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="bg-surface-container-lowest border-b border-outline-variant">
+        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo-mark.png" alt="Yalla Wassel" className="h-10 w-10 object-contain" />
+            <span className="font-bold text-on-surface text-lg">Yalla Wassel</span>
+          </div>
+          <Link to="/track" className="text-label-sm text-on-surface-variant hover:text-primary transition-colors">
+            Track an order
+          </Link>
         </div>
-        <button
-          onClick={() => navigate('/track')}
-          className="text-sm text-slate-400 hover:text-white transition-colors"
-        >
-          Track an order
-        </button>
-      </nav>
+      </header>
 
-      {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16 max-w-3xl mx-auto w-full">
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-7">
+            <div className="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center mx-auto mb-4 shadow-card">
+              {LOGIN_OPTIONS[role].icon}
+            </div>
+            <h1 className="text-headline-lg font-bold text-on-surface">Sign in to Yalla Wassel</h1>
+            <p className="text-body-md text-on-surface-variant mt-1">{LOGIN_OPTIONS[role].helper}</p>
+          </div>
 
-        <div className="inline-block bg-indigo-500/10 border border-indigo-500/20 rounded-full px-4 py-1.5 text-indigo-300 text-sm mb-8">
-          Same-day delivery · Amman, Jordan 🇯🇴
-        </div>
+          <div className="card p-6">
+            <div className="grid grid-cols-3 gap-1 bg-surface-container-low rounded-lg p-1 mb-5">
+              {(Object.keys(LOGIN_OPTIONS) as Role[]).map(option => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => chooseRole(option)}
+                  className={`h-10 inline-flex items-center justify-center gap-1.5 rounded-lg px-2 text-label-sm transition-colors ${
+                    role === option
+                      ? 'bg-surface-container-lowest text-primary shadow-card'
+                      : 'text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  {LOGIN_OPTIONS[option].icon}
+                  <span>{LOGIN_OPTIONS[option].label}</span>
+                </button>
+              ))}
+            </div>
 
-        <h1 className="text-5xl sm:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
-          Manage your drivers<br />
-          <span className="text-indigo-400">without watching them.</span>
-        </h1>
+            {error && (
+              <div className="bg-error-container text-error rounded-xl px-4 py-3 text-body-md mb-4">
+                {error}
+              </div>
+            )}
 
-        <p className="text-slate-400 text-lg sm:text-xl max-w-xl mx-auto leading-relaxed mb-12">
-          Yalla Wassel replaces WhatsApp chaos and paper notes with a simple system built on milestones, proof of delivery, and mutual trust.
-        </p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="label">Email</label>
+                <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
+              </div>
+              <div>
+                <label className="label">Password</label>
+                <div className="relative">
+                  <input className="input pr-11" type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required />
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface">
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" className="btn-primary w-full justify-center" disabled={loading}>
+                {loading ? 'Signing in...' : `Sign in as ${LOGIN_OPTIONS[role].label}`}
+              </button>
+            </form>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center w-full sm:w-auto">
-          <button
-            onClick={() => navigate('/login/dispatcher')}
-            className="group flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl text-base font-semibold transition-all hover:-translate-y-0.5 shadow-lg shadow-indigo-500/20"
-          >
-            I'm a dispatcher
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-          <button
-            onClick={() => navigate('/login/driver')}
-            className="flex items-center justify-center gap-2 bg-white/8 hover:bg-white/12 text-white px-8 py-4 rounded-2xl text-base font-semibold border border-white/10 transition-all hover:-translate-y-0.5"
-          >
-            I'm a driver
-          </button>
-          <button
-            onClick={() => navigate('/track')}
-            className="flex items-center justify-center text-slate-400 hover:text-indigo-300 px-6 py-4 rounded-2xl text-base transition-colors"
-          >
-            Track my order →
-          </button>
+            <div className="mt-5 p-3 bg-surface-container-low border border-outline-variant rounded-xl text-body-md text-on-surface-variant">
+              Demo email: <span className="font-mono text-on-surface">{LOGIN_OPTIONS[role].email}</span><br />
+              Password: <span className="font-mono text-on-surface">123</span>
+            </div>
+          </div>
         </div>
       </main>
-
-      {/* Simple trust section */}
-      <section className="max-w-5xl mx-auto px-6 pb-20 w-full">
-        <div className="grid sm:grid-cols-3 gap-4">
-          {[
-            { emoji: '🚫', title: 'No GPS tracking', desc: 'Drivers update their own milestones. Trust is earned, not enforced.' },
-            { emoji: '✅', title: 'Proof of delivery', desc: 'Recipient name and notes — accountability without cameras.' },
-            { emoji: '⚖️', title: 'Fair workload', desc: 'See who has too many orders and who needs more. Keep it balanced.' },
-          ].map((item) => (
-            <div key={item.title} className="bg-white/[0.04] border border-white/[0.07] rounded-2xl p-5">
-              <div className="text-2xl mb-3">{item.emoji}</div>
-              <h3 className="font-semibold text-white mb-1.5">{item.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <footer className="text-center pb-8 text-slate-600 text-sm">
-        Built for a hackathon · Amman, Jordan
-      </footer>
     </div>
   );
 }

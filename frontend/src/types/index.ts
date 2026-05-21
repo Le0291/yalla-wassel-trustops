@@ -1,4 +1,4 @@
-export type Role = 'DISPATCHER' | 'DRIVER';
+export type Role = 'ADMIN' | 'DISPATCHER' | 'DRIVER';
 export type DriverStatus = 'AVAILABLE' | 'ON_DELIVERY' | 'ON_BREAK' | 'OFF_DUTY';
 export type OrderStatus = 'WAITING' | 'ASSIGNED' | 'ACCEPTED' | 'PICKED_UP' | 'ON_THE_WAY' | 'DELIVERED' | 'ISSUE_REPORTED';
 export type Priority = 'NORMAL' | 'URGENT';

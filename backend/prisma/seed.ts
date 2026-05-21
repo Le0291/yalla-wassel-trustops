@@ -4,13 +4,24 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const hashed = await bcrypt.hash('password123', 10);
+  const hashed = await bcrypt.hash('123', 10);
 
   await prisma.deliveryProof.deleteMany();
   await prisma.issue.deleteMany();
   await prisma.orderStatusHistory.deleteMany();
   await prisma.order.deleteMany();
   await prisma.user.deleteMany();
+
+  // Admin
+  await prisma.user.create({
+    data: {
+      email: 'admin@yallawassel.com',
+      password: hashed,
+      role: 'ADMIN',
+      name: 'Admin Manager',
+      phone: '0799000000',
+    },
+  });
 
   // Dispatcher
   await prisma.user.create({

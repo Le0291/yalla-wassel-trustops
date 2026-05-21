@@ -6,6 +6,7 @@ import { ordersRouter } from './routes/orders';
 import { driversRouter } from './routes/drivers';
 import { reportsRouter } from './routes/reports';
 import { trackRouter } from './routes/track';
+import { adminRouter } from './routes/admin';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/orders', ordersRouter);
 app.use('/api/drivers', driversRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/track', trackRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', app: 'Yalla Wassel TrustOps', timestamp: new Date().toISOString() });
