@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  password     String
+  role         String       // DISPATCHER | DRIVER
+  name         String
+  phone        String?
+  zone         String?
+  driverStatus String       @default("AVAILABLE") // AVAILABLE | ON_DELIVERY | ON_BREAK | OFF_DUTY
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  orders Order[]
+  issues Issue[]
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  senderBusiness  String
+  customerName    String
+  customerPhone   String?
+  deliveryArea    String
+  address         String?
+  priority        String   @default("NORMAL") // NORMAL | URGENT
+  status          String   @default("WAITING") // WAITING | ASSIGNED | ACCEPTED | PICKED_UP | ON_THE_WAY | DELIVERED | ISSUE_REPORTED
+  driverId        String?
+  driver          User?    @relation(fields: [driverId], references: [id])
+  dispatcherNote  String?
+  estimatedWindow String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  statusHistory OrderStatusHistory[]
+  issues        Issue[]
+  proof         DeliveryProof?
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  status    String
+  note      String?
+  changedBy String?
+  timestamp DateTime @default(now())
+}
+
+model Issue {
+  id           String    @id @default(cuid())
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id])
+  driverId     String
+  driver       User      @relation(fields: [driverId], references: [id])
+  reason       String
+  description  String?
+  resolved     Boolean   @default(false)
+  resolvedAt   DateTime?
+  resolvedNote String?
+  createdAt    DateTime  @default(now())
+}
+
+model DeliveryProof {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id])
+  recipientName String
+  notes         String?
+  photoUrl      String?
+  submittedAt   DateTime @default(now())
+}
